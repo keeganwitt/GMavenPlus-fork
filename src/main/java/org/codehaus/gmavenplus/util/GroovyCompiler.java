@@ -16,6 +16,7 @@ import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.CodeSource;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -249,6 +250,18 @@ public class GroovyCompiler {
      * Java 1.8 version.
      */
     protected static final Version JAVA_12 = new Version(12);
+
+    private static final Map<String, String> JAVAC_TARGET_TO_TARGET_BYTECODE;
+
+    static {
+        Map<String, String> map = new HashMap<>();
+        map.put("5", "1.5");
+        map.put("6", "1.6");
+        map.put("7", "1.7");
+        map.put("8", "1.8");
+        map.put("1.9", "9");
+        JAVAC_TARGET_TO_TARGET_BYTECODE = Collections.unmodifiableMap(map);
+    }
 
     private final ClassWrangler classWrangler;
     private final Log log;
@@ -758,13 +771,7 @@ public class GroovyCompiler {
     }
 
     public static String translateJavacTargetToTargetBytecode(String targetBytecode) {
-        Map<String, String> javacTargetToTargetBytecode = new HashMap<>();
-        javacTargetToTargetBytecode.put("5", "1.5");
-        javacTargetToTargetBytecode.put("6", "1.6");
-        javacTargetToTargetBytecode.put("7", "1.7");
-        javacTargetToTargetBytecode.put("8", "1.8");
-        javacTargetToTargetBytecode.put("1.9", "9");
-        return javacTargetToTargetBytecode.getOrDefault(targetBytecode, targetBytecode);
+        return JAVAC_TARGET_TO_TARGET_BYTECODE.getOrDefault(targetBytecode, targetBytecode);
     }
 
     protected boolean isJavaSupportIndy() {
