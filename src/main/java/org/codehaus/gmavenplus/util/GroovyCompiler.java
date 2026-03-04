@@ -13,6 +13,7 @@ import java.util.Properties;
 import org.codehaus.gmavenplus.model.internal.Version;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.CodeSource;
@@ -358,8 +359,9 @@ public class GroovyCompiler {
             if (linkArgumentClass != null) {
                 Method setHref = findMethod(linkArgumentClass, "setHref", String.class);
                 Method setPackages = findMethod(linkArgumentClass, "setPackages", String.class);
+                Constructor<?> linkArgumentConstructor = findConstructor(linkArgumentClass);
                 for (Link link : configuration.getLinks()) {
-                    Object linkArgument = invokeConstructor(findConstructor(linkArgumentClass));
+                    Object linkArgument = invokeConstructor(linkArgumentConstructor);
                     invokeMethod(setHref, linkArgument, link.getHref());
                     invokeMethod(setPackages, linkArgument, link.getPackages());
                     linksList.add(linkArgument);
