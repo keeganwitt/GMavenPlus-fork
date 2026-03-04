@@ -8,20 +8,14 @@ import org.codehaus.gmavenplus.model.IncludeClasspath;
 import org.codehaus.gmavenplus.model.Link;
 import org.codehaus.gmavenplus.model.Scopes;
 import org.codehaus.gmavenplus.model.internal.Version;
-import org.codehaus.gmavenplus.util.FileUtils;
 
 import org.codehaus.gmavenplus.model.GroovyDocConfiguration;
 import org.codehaus.gmavenplus.util.GroovyCompiler;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -432,30 +426,7 @@ public abstract class AbstractGroovyDocMojo extends AbstractGroovySourcesMojo {
     protected void copyStylesheet(final File outputDirectory) {
         getLog().info("Using stylesheet from " + stylesheetFile.getAbsolutePath() + ".");
         try {
-            BufferedReader bufferedReader = null;
-            BufferedWriter bufferedWriter = null;
-            try {
-                if (stylesheetEncoding != null) {
-                    bufferedReader = new BufferedReader(new InputStreamReader(Files.newInputStream(stylesheetFile.toPath()), stylesheetEncoding));
-                } else {
-                    bufferedReader = new BufferedReader(new InputStreamReader(Files.newInputStream(stylesheetFile.toPath())));
-                }
-                StringBuilder css = new StringBuilder();
-                String line;
-                while ((line = bufferedReader.readLine()) != null) {
-                    css.append(line).append("\n");
-                }
-                File outfile = new File(outputDirectory, "stylesheet.css");
-                if (stylesheetEncoding != null) {
-                    bufferedWriter = new BufferedWriter(new OutputStreamWriter(Files.newOutputStream(outfile.toPath()), stylesheetEncoding));
-                } else {
-                    bufferedWriter = new BufferedWriter(new OutputStreamWriter(Files.newOutputStream(outfile.toPath())));
-                }
-                bufferedWriter.write(css.toString());
-            } finally {
-                FileUtils.closeQuietly(bufferedReader);
-                FileUtils.closeQuietly(bufferedWriter);
-            }
+            java.nio.file.Files.copy(stylesheetFile.toPath(), new File(outputDirectory, "stylesheet.css").toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             getLog().warn("Unable to copy specified stylesheet (" + stylesheetFile.getAbsolutePath() + ").");
         }
