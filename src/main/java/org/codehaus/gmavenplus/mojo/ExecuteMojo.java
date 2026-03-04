@@ -230,18 +230,17 @@ public class ExecuteMojo extends AbstractToolsMojo {
         int scriptNum = 1;
         for (String script : scripts) {
             try {
-                // TODO: try as file first, then as URL?
-                try {
-                    // it's a URL to a script
-                    executeScriptFromUrl(groovyShellClass, shell, script);
-                } catch (MalformedURLException e) {
-                    // it's not a URL to a script, try as a filename
-                    File scriptFile = new File(script);
-                    if (scriptFile.isFile()) {
-                        getLog().info("Running Groovy script from " + scriptFile.getCanonicalPath() + ".");
-                        Method evaluateFile = findMethod(groovyShellClass, "evaluate", File.class);
-                        invokeMethod(evaluateFile, shell, scriptFile);
-                    } else {
+                File scriptFile = new File(script);
+                if (scriptFile.isFile()) {
+                    // it's a filename
+                    getLog().info("Running Groovy script from " + scriptFile.getCanonicalPath() + ".");
+                    Method evaluateFile = findMethod(groovyShellClass, "evaluate", File.class);
+                    invokeMethod(evaluateFile, shell, scriptFile);
+                } else {
+                    try {
+                        // it's a URL to a script
+                        executeScriptFromUrl(groovyShellClass, shell, script);
+                    } catch (MalformedURLException e) {
                         // it's neither a filename or URL, treat as a script body
                         Method evaluateString = findMethod(groovyShellClass, "evaluate", String.class);
                         invokeMethod(evaluateString, shell, script);
