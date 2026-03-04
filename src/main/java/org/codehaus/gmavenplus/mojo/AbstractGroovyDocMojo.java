@@ -8,7 +8,6 @@ import org.codehaus.gmavenplus.model.IncludeClasspath;
 import org.codehaus.gmavenplus.model.Link;
 import org.codehaus.gmavenplus.model.Scopes;
 import org.codehaus.gmavenplus.model.internal.Version;
-import org.codehaus.gmavenplus.util.FileUtils;
 
 import org.codehaus.gmavenplus.model.GroovyDocConfiguration;
 import org.codehaus.gmavenplus.util.GroovyCompiler;
@@ -17,7 +16,9 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
@@ -431,30 +432,17 @@ public abstract class AbstractGroovyDocMojo extends AbstractGroovySourcesMojo {
      */
     protected void copyStylesheet(final File outputDirectory) {
         getLog().info("Using stylesheet from " + stylesheetFile.getAbsolutePath() + ".");
-        try {
-            BufferedReader bufferedReader = null;
-            BufferedWriter bufferedWriter = null;
-            try {
-                if (stylesheetEncoding != null) {
-                    bufferedReader = new BufferedReader(new InputStreamReader(Files.newInputStream(stylesheetFile.toPath()), stylesheetEncoding));
-                } else {
-                    bufferedReader = new BufferedReader(new InputStreamReader(Files.newInputStream(stylesheetFile.toPath())));
-                }
-                StringBuilder css = new StringBuilder();
-                String line;
-                while ((line = bufferedReader.readLine()) != null) {
-                    css.append(line).append("\n");
-                }
-                File outfile = new File(outputDirectory, "stylesheet.css");
-                if (stylesheetEncoding != null) {
-                    bufferedWriter = new BufferedWriter(new OutputStreamWriter(Files.newOutputStream(outfile.toPath()), stylesheetEncoding));
-                } else {
-                    bufferedWriter = new BufferedWriter(new OutputStreamWriter(Files.newOutputStream(outfile.toPath())));
-                }
-                bufferedWriter.write(css.toString());
-            } finally {
-                FileUtils.closeQuietly(bufferedReader);
-                FileUtils.closeQuietly(bufferedWriter);
+        File outfile = new File(outputDirectory, "stylesheet.css");
+        try (InputStream inputStream = Files.newInputStream(stylesheetFile.toPath());
+             InputStreamReader reader = (stylesheetEncoding != null) ? new InputStreamReader(inputStream, stylesheetEncoding) : new InputStreamReader(inputStream);
+             BufferedReader bufferedReader = new BufferedReader(reader);
+             OutputStream outputStream = Files.newOutputStream(outfile.toPath());
+             OutputStreamWriter writer = (stylesheetEncoding != null) ? new OutputStreamWriter(outputStream, stylesheetEncoding) : new OutputStreamWriter(outputStream);
+             BufferedWriter bufferedWriter = new BufferedWriter(writer)) {
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                bufferedWriter.write(line);
+                bufferedWriter.write("\n");
             }
         } catch (IOException e) {
             getLog().warn("Unable to copy specified stylesheet (" + stylesheetFile.getAbsolutePath() + ").");
