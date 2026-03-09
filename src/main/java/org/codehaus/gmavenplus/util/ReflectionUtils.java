@@ -117,8 +117,16 @@ public class ReflectionUtils {
      * @param valueName The name of the enum value to get
      * @return The enum value
      */
+    @SuppressWarnings("unchecked")
     public static Object getEnumValue(final Class<?> clazz, final String valueName) {
         if (clazz.isEnum()) {
+            if (valueName != null) {
+                try {
+                    return Enum.valueOf((Class<Enum>) clazz, valueName);
+                } catch (IllegalArgumentException e) {
+                    // fall through to loop to support cases where toString() is overridden
+                }
+            }
             for (Object o : clazz.getEnumConstants()) {
                 if (o.toString().equals(valueName)) {
                     return o;
