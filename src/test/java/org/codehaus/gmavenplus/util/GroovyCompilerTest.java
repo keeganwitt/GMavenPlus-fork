@@ -1,17 +1,24 @@
 package org.codehaus.gmavenplus.util;
 
 import org.apache.maven.plugin.logging.Log;
+import org.codehaus.gmavenplus.model.GroovyStubConfiguration;
 import org.codehaus.gmavenplus.model.internal.Version;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.io.File;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 
 /**
  * Unit tests for the GroovyCompiler class.
@@ -464,7 +471,50 @@ public class GroovyCompilerTest {
         }
     }
 
+    @Test
+    public void testGenerateStubsNoSources() throws Exception {
+        setupCompiler("2.4.0");
+        GroovyStubConfiguration config = new GroovyStubConfiguration(null, null, null);
+        compiler.generateStubs(config);
+        verify(log).info("No sources specified for stub generation. Skipping.");
+    }
+
+    @Test
+    public void testGenerateStubsEmptySources() throws Exception {
+        setupCompiler("2.4.0");
+        GroovyStubConfiguration config = new GroovyStubConfiguration(new HashSet<File>(), null, null);
+        compiler.generateStubs(config);
+        verify(log).info("No sources specified for stub generation. Skipping.");
+    }
+
+    @Test
+    public void testGenerateStubsUnsupportedGroovy() throws Exception {
+        setupCompiler("1.8.1");
+        doReturn("1.8.1").when(classWrangler).getGroovyVersionString();
+        Set<File> sources = new HashSet<>();
+        sources.add(new File("Test.groovy"));
+        GroovyStubConfiguration config = new GroovyStubConfiguration(sources, null, null);
+        compiler.generateStubs(config);
+        verify(log).error(anyString());
+    }
+
+    @Test
+    public void testGenerateStubsHappyPath() throws Exception {
+        setupCompiler("2.4.0");
+        Set<File> sources = new HashSet<>();
+        sources.add(new File("Test.groovy"));
+        GroovyStubConfiguration config = new GroovyStubConfiguration(sources, null, new File("target/stubs"));
+        config.setSkipBytecodeCheck(true);
+
+        compiler.generateStubs(config);
+        assertTrue(compiler.setupStubCompilerConfigurationCalled);
+        assertTrue(compiler.addGroovySourcesCalled);
+    }
+
     protected static class TestGroovyCompiler extends GroovyCompiler {
+        public boolean setupStubCompilerConfigurationCalled = false;
+        public boolean addGroovySourcesCalled = false;
+
         public TestGroovyCompiler(ClassWrangler classWrangler, Log log) {
             super(classWrangler, log);
         }
@@ -472,6 +522,26 @@ public class GroovyCompilerTest {
         @Override
         public void verifyGroovyVersionSupportsTargetBytecode(String targetBytecode) {
            super.verifyGroovyVersionSupportsTargetBytecode(targetBytecode);
+        }
+
+        @Override
+        protected Object setupStubCompilerConfiguration(GroovyStubConfiguration configuration, Class<?> compilerConfigurationClass) {
+            setupStubCompilerConfigurationCalled = true;
+            return new Object();
+        }
+
+        @Override
+        protected void addGroovySources(Set<File> stubSources, Class<?> compilerConfigurationClass, Class<?> javaStubCompilationUnitClass, Object compilerConfiguration, Object javaStubCompilationUnit) {
+            addGroovySourcesCalled = true;
+        }
+
+        @Override
+        public void generateStubs(GroovyStubConfiguration configuration) {
+            try {
+                super.generateStubs(configuration);
+            } catch (Exception e) {
+                // we expect reflection to fail in this test if it gets past our overridden methods
+            }
         }
     }
 }
