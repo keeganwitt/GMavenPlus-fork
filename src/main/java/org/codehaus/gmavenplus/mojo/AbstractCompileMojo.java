@@ -264,8 +264,7 @@ public abstract class AbstractCompileMojo extends AbstractGroovySourcesMojo {
         }
 
         try {
-            File configFile = File.createTempFile("gmavenplus-compile-config", ".ser");
-            configFile.deleteOnExit();
+            File configFile = createTempConfigFile("gmavenplus-compile-config");
             try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(configFile.toPath()))) {
                 oos.writeObject(configuration);
             }

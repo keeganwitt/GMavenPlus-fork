@@ -212,8 +212,7 @@ public abstract class AbstractGenerateStubsMojo extends AbstractGroovyStubSource
     protected void performForkedStubGeneration(org.codehaus.gmavenplus.model.GroovyStubConfiguration configuration, String javaExecutable) throws InvocationTargetException {
         try {
             // Write configuration to file
-            File configFile = File.createTempFile("groovy-stub-config", ".ser");
-            configFile.deleteOnExit();
+            File configFile = createTempConfigFile("groovy-stub-config");
             try (java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(java.nio.file.Files.newOutputStream(configFile.toPath()))) {
                 oos.writeObject(configuration);
             }

@@ -337,8 +337,7 @@ public abstract class AbstractGroovyDocMojo extends AbstractGroovySourcesMojo {
     protected void performForkedGroovyDocGeneration(GroovyDocConfiguration configuration, String javaExecutable) throws InvocationTargetException {
         try {
              // Write configuration to file
-            File configFile = File.createTempFile("groovy-doc-config", ".ser");
-            configFile.deleteOnExit();
+            File configFile = createTempConfigFile("groovy-doc-config");
             try (java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(java.nio.file.Files.newOutputStream(configFile.toPath()))) {
                 oos.writeObject(configuration);
             }

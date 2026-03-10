@@ -275,4 +275,25 @@ public abstract class AbstractGroovyMojo extends AbstractMojo {
         }
         return javaExecutable;
     }
+
+    /**
+     * Creates a temporary configuration file with restrictive permissions.
+     *
+     * @param prefix the prefix for the temporary file
+     * @return the temporary configuration file
+     * @throws java.io.IOException when a temporary file cannot be created
+     */
+    protected File createTempConfigFile(String prefix) throws java.io.IOException {
+        File configFile;
+        try {
+            java.util.Set<java.nio.file.attribute.PosixFilePermission> perms = java.util.EnumSet.of(java.nio.file.attribute.PosixFilePermission.OWNER_READ, java.nio.file.attribute.PosixFilePermission.OWNER_WRITE);
+            java.nio.file.attribute.FileAttribute<java.util.Set<java.nio.file.attribute.PosixFilePermission>> attr = java.nio.file.attribute.PosixFilePermissions.asFileAttribute(perms);
+            configFile = java.nio.file.Files.createTempFile(prefix, ".ser", attr).toFile();
+        } catch (UnsupportedOperationException e) {
+            configFile = java.nio.file.Files.createTempFile(prefix, ".ser").toFile();
+        }
+        configFile.deleteOnExit();
+        return configFile;
+    }
+
 }
