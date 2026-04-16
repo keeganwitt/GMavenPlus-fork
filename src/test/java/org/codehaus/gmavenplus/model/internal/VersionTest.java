@@ -129,7 +129,28 @@ public class VersionTest {
     @Test
     public void testParseFromStringMinorIsNotInteger() {
         Version version = Version.parseFromString("0.a");
+        assertEquals(0, version.getMajor());
         assertEquals(0, version.getMinor());
+        assertEquals(0, version.getRevision());
+        assertEquals("a-", version.getTag());
+    }
+
+    @Test
+    public void testParseFromStringAllParts() {
+        Version version = Version.parseFromString("1.2.3.beta");
+        assertEquals(1, version.getMajor());
+        assertEquals(2, version.getMinor());
+        assertEquals(3, version.getRevision());
+        assertEquals("beta", version.getTag());
+    }
+
+    @Test
+    public void testParseFromStringRevisionIsNotInteger() {
+        Version version = Version.parseFromString("1.2.alpha");
+        assertEquals(1, version.getMajor());
+        assertEquals(2, version.getMinor());
+        assertEquals(0, version.getRevision());
+        assertEquals("alpha-", version.getTag());
     }
 
     @Test(expected = IllegalArgumentException.class)
